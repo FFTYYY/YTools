@@ -6,14 +6,17 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from OpenGL.GL import shaders
+from opengl_easy_use import *
 
 import glsl_use as loader
+import numpy as np
+import ctypes
 
 import time
 
-window_width = 700;
-window_height = 700;
-window_z = 700;
+window_w = 700
+window_h = 700
+window_z = 100
 
 u = 60;
 
@@ -24,8 +27,9 @@ str_ver = '''
 
 layout(location = 0) in vec4 position; 
 //layout(location = 2) in vec4 color; 
+layout(location = 2) in vec3 my_color; 
 
-in vec4 gl_Color;
+//in vec4 gl_Color;
 
 uniform mat4 mat_pro;
 uniform mat4 mat_modview;
@@ -37,7 +41,7 @@ void main()
 {
 	gl_Position = mat_pro * mat_modview * position;
 	my_id = gl_VertexID;
-	the_color = gl_Color;
+	the_color = vec4(my_color.rgb , 0);
 }
 '''
 
@@ -109,25 +113,45 @@ void main()
 
 '''
 
+
+def init_program():
+	global progrm
+	progrm = loader.ShaderProgram(strings = [
+		(GL_VERTEX_SHADER 	, str_ver),
+		(GL_FRAGMENT_SHADER , str_fra),
+		(GL_GEOMETRY_SHADER , str_geo),
+	])
+
+	progrm.update_projection_matrix("mat_pro")
+
+def init_buf():
+	VA_Buf = glGenBuffers(1)
+
+	points = np.array([
+		0.,0.,0.,		.8,.4,.1,
+		0.,200.,0.,		.5,.4,.5,
+		200.,0.,0.,		.8,.4,.8,
+	] , dtype = "f")
+
+	glBindBuffer(GL_ARRAY_BUFFER , VA_Buf)
+	glBufferData(GL_ARRAY_BUFFER , points.nbytes , points , GL_STATIC_DRAW)
+
+
 def draw_rec():
-	glPushMatrix();
+	glPushMatrix()
 
-	glBegin(GL_TRIANGLES);
+	#glColor3f(.8,.3,.3)
+	glEnableVertexAttribArray(0)
+	glEnableVertexAttribArray(2)
 
-	glColor3f(.3,.2,.9);
-	glVertex3f(0,0,0);
-	glVertex3f(0,200,0);
-	glVertex3f(200,0,0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * 6, None)
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 4 * 6, ctypes.c_void_p(4 * 3))
+	glDrawArrays(GL_TRIANGLES, 0, 3)
 
-	glColor3f(.9,.4,.2);
-	glVertex3f(0,0,0);
-	glVertex3f(0,200,0);
-	glVertex3f(200,0,0);
+	glDisableVertexAttribArray(0)
+	glDisableVertexAttribArray(2)
 
-	glEnd();
-
-
-	glPopMatrix();
+	glPopMatrix()
 
 def draw():
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -146,51 +170,12 @@ def draw():
 
 	time.sleep(1 / 60);
 
-def init():
-	glClearColor(.4,.4,.4,0);
-	#  glClearColor(0.,0.,0.,0);
-	glViewport(0,0,window_width, window_height);
 
-	glMatrixMode(GL_PROJECTION);
-	glOrtho(-window_width/2,window_width/2,-window_height/2,window_height/2,-window_z,window_z);
-
-	glShadeModel(GL_SMOOTH);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glEnable(GL_DEPTH_TEST);
-
-	glEnable(GL_LINE_STIPPLE);
-
-
-	glClear(GL_COLOR_BUFFER_BIT);
-	glClear(GL_DEPTH_BUFFER_BIT);
-
-	global progrm
-	progrm = loader.ShaderProgram(strings = [
-		(GL_VERTEX_SHADER 	, str_ver),
-		(GL_FRAGMENT_SHADER , str_fra),
-		(GL_GEOMETRY_SHADER , str_geo),
-	])
-
-	progrm.update_projection_matrix("mat_pro")
-
-
-
-
-glutInit();
-
-glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE | GLUT_DEPTH);
-glutInitWindowSize(window_width,window_height);
-glutCreateWindow(b"hello");
-
-init();
-
-glutDisplayFunc(draw);
-glutIdleFunc(draw);
-
-
-program = glCreateProgram()
-
-glutMainLoop();
+initer = Initer(
+	window_name = b"hello" , 
+	window_size = (window_w,window_h) , 
+	projection_args = (-window_w,window_w,-window_h,window_h,-window_z,window_z) , 
+	display_func = draw , 
+	idle_func = draw , 
+	other_commands = [init_program , init_buf]
+).init().loop()
