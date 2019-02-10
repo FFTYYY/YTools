@@ -93,10 +93,10 @@ class ShaderProgram:
 			for shader_type , string in strings:
 				self.add_shader_from_string(shader_type , string)
 
-		if(end_create):
+		if end_create:
 			self.end_create()
 
-		if(use):
+		if use:
 			self.enable()
 
 	def end_create(self):
