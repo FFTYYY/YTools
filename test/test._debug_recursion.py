@@ -1,4 +1,6 @@
-import debug_recursion
+import sys
+sys.path.append("E:/Programming/Projects/Doing/Tools/")
+import YYYTools.debug_recursion as debug_recursion
 
 deb = debug_recursion.RecursionDebuger()
 
