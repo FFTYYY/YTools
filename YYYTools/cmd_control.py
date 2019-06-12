@@ -2,7 +2,7 @@
 	让同一个cmd执行多条命令（代替os.system())
 	沙雕版
 '''
-
+import os
 from pymouse import PyMouse
 from pykeyboard import PyKeyboard
 import time
@@ -14,7 +14,7 @@ class Cmd:
 	'''
 		创建一个控制台对象，稍后可以对其提供指令
 	'''
-	def __init__(self , start_cmd_cm =[[_key.windows_l_key , "r"] , "cmd\n"] , sleep_time = 0.4):
+	def __init__(self , start_cmd_cm = ["start cmd"] , sleep_time = 0.3):
 		'''
 			创建一个控制台对象
 			一条「指令」指的是一系列按键命令，由PyKeyboard来运行
@@ -34,7 +34,8 @@ class Cmd:
 			打开控制台，用初始化的时候提供的打开控制台指令
 		'''
 		for cm in self.start_cmd_cm:
-			self.run_cm(cm)
+			os.system(cm)
+			time.sleep(0.1)
 
 	def decide_func(self , cm):
 		'''
@@ -90,6 +91,6 @@ class Cmd:
 
 if __name__ == "__main__":
 	cmd = Cmd()
-	cmd.add_cm("python\n")
+	cmd.add_cm("python && python\n")
 	cmd.add_cm("print ('hello')\n")
 	cmd.run()
