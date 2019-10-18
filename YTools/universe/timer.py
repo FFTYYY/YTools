@@ -1,5 +1,5 @@
 import time
-from YYYTools.beautiful_str import beautiful_str as tostr
+from .beautiful_str import beautiful_str as tostr
 from timeit import default_timer as gettime
 
 class Timer:

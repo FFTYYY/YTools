@@ -1,4 +1,5 @@
 import math as M
+
 def beautiful_str(name_list , value_list):
 
 	vn = len(name_list)
