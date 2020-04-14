@@ -13,7 +13,7 @@ pkgs = [p for p in find_packages() if p.startswith('YTools')]
 print(pkgs)
 
 setup(
-    name='YTools',
+    name='YYYTools',
     version='0.1',
     url='http://github.com/FFTYYY/YTools',
     description='',
