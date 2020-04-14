@@ -3,6 +3,23 @@ from .beautiful_str import beautiful_str as tostr
 from timeit import default_timer as gettime
 
 class Timer:
+	'''一个计时器。
+
+	用法：
+	with Timer(name):
+		do_someting
+
+	do_someting这段代码的用时会以name为键记录。
+	Timer.output_all()会生成一个字符串描述已有的所有记录。
+
+	示例：
+	with Timer("hahah"):
+		print (123)
+	with Timer("sleep"):
+		time.sleep(1)
+	print(Timer.output_all())
+	'''
+
 	time_sum = {}
 	count = {}
 	before_enter = []
@@ -67,20 +84,4 @@ class Timer:
 			ret.append([x , f2s(time_sum[x]) , count[x] , f2s(time_sum[x] / count[x])])
 
 		return tostr(["name" , "time (s)" , "count" , "avg_time (s)"]  , ret)
-
-if __name__ == "__main__":
-
-	Timer.before_enter.append(lambda : print ("now start"))
-
-	with Timer("hahah"):
-		print (123)
-
-	with Timer("fuck"):
-		time.sleep(1)
-	with Timer("fuck"):
-		time.sleep(1)
-	with Timer("fuck"):
-		time.sleep(1)
-
-	print(Timer.output_all())
 

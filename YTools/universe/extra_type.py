@@ -1,25 +1,21 @@
-class Struct:
-	def __init__(self , *args , **kwargs):
-		self._lis = args
-		self._map = kwargs
-		self.a = 12
+import pdb
+from .beautiful_str import beautiful_str
 
-	def __getattr__(self , name):
-		if name == "_map":
-			return self._map
-		return self._map.get(name)
+class Struct:		
+	'''一个可以自由添加元素的类。
+	'''
 
-	def __getitem__(self , k):
-		if isinstance(k , str):
-			return self.__getattr__(k)
+	def __init__(self , **kwargs):
+		self.__dict__ = kwargs
 
-		try:
-			k = int(k) % (len(self._lis))
-		except Exception:
-			return None
-		return self._lis[k]
-	
-	def __unscroll__(self , name = True):
-		if name:
-			return self._map
-		return self._lis
+	def __get__(self , name):
+		if name == "__dict__":
+			return self.__dict__
+		return self.__dict__.get(name)
+
+	def __set__(self , name , val):
+		self.__dict__[name] = val
+
+	def __str__(self):
+		return beautiful_str(["name" , "value"] , [[x , self.__dict__[x]] for x in self.__dict__])
+
