@@ -18,7 +18,7 @@ class Logger:
 	close：关闭文件
 
 	'''
-	def __init__(self , mode = ["write" , "print"] , log_path = None , add_time = True):
+	def __init__(self , mode = ["print"] , log_path = None , add_time = True):
 		if log_path:
 			self.log_fil = open(log_path , "w" , encoding = "utf-8")
 		else:
