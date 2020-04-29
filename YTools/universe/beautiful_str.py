@@ -1,9 +1,5 @@
 import math as M
-
-def real_len(s):
-	l = (len(bytes(s , encoding = "utf-8")) - len(s)) // 2 + len(s)
-	l += 7 * s.count("\t")
-	return l
+from .strlen import max_len as real_len
 	
 def beautiful_str(name_list , value_list):
 	'''输出一个很好看的表格。
