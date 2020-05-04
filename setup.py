@@ -14,15 +14,17 @@ print(pkgs)
 
 setup(
     name='YYYTools',
-    version='0.1',
+    version='0.1.1',
     url='http://github.com/FFTYYY/YTools',
     description='',
     long_description=readme,
     long_description_content_type='text/markdown',
     license='MIT',
     author = 'Yang Yongyi',
-	author_email = '1004473299@qq.com',
+	author_email = 'yongyiyang17@fudan.edu.cn',
     python_requires = '>=3.6',
     packages = pkgs,
     install_requires = reqs.strip().split('\n'),
+
+    include_package_data = True , 
 )

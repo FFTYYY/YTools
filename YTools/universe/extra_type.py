@@ -21,7 +21,7 @@ class Struct(object):
 			return object.__getattribute__(self , name)
 
 		if hasattr(self , "_getter") and self._getter.get(name):
-			self.__dict__[name] = self._getter[name](self)
+			return self._getter[name](self)
 
 		if name not in self.__dict__:
 			self.__dict__[name] = self._default
