@@ -4,6 +4,8 @@
 	使用Shader类来创建着色器
 
 	沒有什麼錯誤判斷，不正確使用的話會爆炸吧大概
+
+	TODO：最近一次测试发现不会用了
 '''
 
 from OpenGL.GL import *

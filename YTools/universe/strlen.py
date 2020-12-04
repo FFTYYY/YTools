@@ -1,7 +1,7 @@
 '''求字符串的显示长度'''
 
 def len_ignore_n(s):
-	'''无视\n的s的长度
+	'''无视\\n的s的长度
 	'''
 	s = str(s).strip()
 	s = s.replace("\n" , "")
