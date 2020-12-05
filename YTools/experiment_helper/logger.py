@@ -1,21 +1,22 @@
 from .watch_time import my_clock
 from ..universe.strlen import last_len
+import time
+
 class Logger:
 	'''自动日志。
 
 	参数：
 	mode：一个函数，代表输出方向。"write"表示向文件写
-
 	log_path：日志文件的位置。如果选了"write"的话必须填此项。如果打开了文件最后一定要调用close()
+	append：往末尾添加哪些信息。clock表示当前运行秒数，time表示当前时间，也可以用其他函数
 
-	add_time：是否要在每行末尾输出当前时间
 
 	方法：
 	log：输出一个字符串
 	close：关闭文件
-
+	
 	'''
-	def __init__(self , mode = [print] , log_path = None , add_time = True , line_length = 90):
+	def __init__(self , mode = [print] , log_path = None , append = ["clock"] , line_length = 90):
 		if log_path:
 			self.log_fil = open(log_path , "w" , encoding = "utf-8")
 		else:
@@ -26,7 +27,7 @@ class Logger:
 		if ("write" in mode) and (not log_path):
 			raise Exception("Should have a log_path")
 
-		self.add_time = add_time
+		self.append 	= append
 		self.line_length = line_length
 
 	def close(self):
@@ -35,7 +36,7 @@ class Logger:
 
 	def log(self , content = ""):
 
-		content = self.post_process(content)
+		content = self.pre_process(content)
 
 		for x in self.mode:
 			if x == "write":
@@ -51,8 +52,21 @@ class Logger:
 			num = self.line_length
 		self.log(char * num)
 
-	def post_process(self , content):
-		if self.add_time:
-			insert_space = self.line_length - last_len(content) #补全到line_length 
-			content += (" " * insert_space) + "|" + " %.2fs" % (my_clock())
+	def pre_process(self , content):
+		insert_space = self.line_length - last_len(content) #补全到line_length 
+		content += " " * insert_space
+
+		for x in self.append: #要往末尾添加哪些东西
+
+			y = ""
+			if x == "clock":
+				y = "%.2fs" % (my_clock())
+			elif x == "time":
+				y = time.strftime("%Y-%m-%d %H:%M:%S" , time.localtime() )
+			else:
+				y = x()
+
+			content += "| " + y + " "
+
+
 		return content
