@@ -2,8 +2,12 @@ import socket
 import copy
 import pdb
 import threading
+import random
 
-MSG_MAX_LENGTH = 2000
+MSG_MAX_LENGTH = 2048
+
+def randport():
+	return random.randint(23333 , 60000)
 
 class SendServer:
 	def __init__(self , host = "127.0.0.1"):
@@ -13,6 +17,9 @@ class SendServer:
 
 	def add_target(self , ip = "127.0.0.1" , port = 65432):
 		
+		if self.targets.get( (ip , port) , None) is not None: #已经建立连接了
+			return True
+
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		try:
 			s.connect( (ip, port) )		
@@ -29,7 +36,6 @@ class SendServer:
 
 	def send(self , data):
 		'''返回所有无法响应的目标'''
-		data = bytes(str(data) , encoding = "utf-8")
 
 		leaved = []
 		for ip , port in copy.copy(self.targets):
@@ -75,7 +81,6 @@ class ChildListener(threading.Thread):
 	def run(self):
 		with self.conn:
 			while not self.closed:
-
 				try:
 					data = self.conn.recv(MSG_MAX_LENGTH)
 				except ConnectionResetError:
@@ -92,7 +97,7 @@ class ChildListener(threading.Thread):
 		self.closed = True
 
 class ListenServer(threading.Thread):
-	def __init__(self , host  = "127.0.0.1" , port  = 65432 , callback = default_callback):
+	def __init__(self , host  = "127.0.0.1" , port  = 65432 , callback = default_callback , block = False):
 		threading.Thread.__init__(self)
 		self.setDaemon(True)
 
@@ -103,12 +108,14 @@ class ListenServer(threading.Thread):
 		self.childs = []
 		self.closed = False
 	
+		self.block = block
+
 		self.unexpect_quit = None
 
 	def run(self):
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 			s.bind((self.host, self.port))
-			s.listen()
+			s.listen(50)
 
 			while not self.closed:
 				conn, addr = s.accept()
