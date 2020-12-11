@@ -67,7 +67,7 @@ class LockerClient:
 
 		send_ret = func(*args , **kwargs , id = my_id)
 		while len(send_ret) > 0:
-			print("连接失败")
+			# print("连接失败")
 			self.try_to_connect()
 			send_ret = func(*args , **kwargs , id = my_id)
 
