@@ -1,1 +1,1 @@
-from .lock import Locker
+from .lock import LockerClient as Locker
