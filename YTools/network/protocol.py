@@ -97,6 +97,7 @@ class Protocol:
 		return head
 
 	def encode_body(self , **kwargs):
+		body_lens = {}
 		body = b''
 		for name , length , encode_f , decode_f in self.body:
 			encoded = encode_f(kwargs[name])
@@ -105,15 +106,16 @@ class Protocol:
 				if len(encoded) != length:
 					raise "length incorrect"
 			else:
-				if len(encoded) != kwargs[length]:
-					raise "length incorrect"
+				body_lens[length] = len(encoded)
 
 			body += encoded
 
-		return body
+		return body , body_lens
 
 	def encode(self , **kwargs):
-		return self.encode_head(**kwargs) + self.encode_body(**kwargs)
+		body , body_lens = self.encode_body(**kwargs)
+		head = self.encode_head(**kwargs , **body_lens)
+		return head + body
 
 	def decode_head(self , head):
 
