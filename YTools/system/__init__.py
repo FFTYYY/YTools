@@ -1,2 +1,2 @@
-from .locker import Locker
+from .locker.lock import LockerClient as Locker
 from .cmd_control import Cmd

@@ -53,7 +53,7 @@ class DataReader:
 		return self.read(*pargs , **kwargs)
 
 class Protocol:
-	def __init__(self , standard):
+	def __init__(self , standard = None , head = None , body = None):
 		'''
 			协议标准：
 			{
@@ -77,9 +77,18 @@ class Protocol:
 					["content" , "len" , str2bytes , bytes2str]
 				]
 			}
+
+			也可以写作head = hhh , body = bbb。会被自动解释成standard = {"head" : hhh , "body": bbb}
 		'''
 
-		self.standard = standard
+		if standard is None:
+			self.standard = {
+				"head" : head , 
+				"body" : body , 
+			}
+		else:
+			self.standard = standard
+		
 		self.head = self.standard["head"]
 		self.body = self.standard["body"]
 
