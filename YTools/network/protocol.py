@@ -7,10 +7,10 @@ def str2bytes(x):
 	return bytes(x , encoding = "utf-8")
 
 def bytes2int(x):
-	return int.from_bytes(x , byteorder = 'little')
+	return int.from_bytes(x , byteorder = 'little' , signed = True)
 
 def int2bytes(x , length = 4):
-	return x.to_bytes(length , byteorder = 'little')
+	return x.to_bytes(length , byteorder = 'little' , signed = True)
 
 def int2ip(x):
 	a = ((x & 0x000000FF) >> 0)
