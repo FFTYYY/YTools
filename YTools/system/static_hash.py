@@ -1,5 +1,5 @@
 from .fakepath import new_fakefolder
-from .onexit import add_quit_methods
+from ..universe.onexit import add_quit_methods
 import sqlite3
 import os
 from collections import Iterable
@@ -51,6 +51,7 @@ class StaticHash:
 
 	def get(self , key):
 		'''查询某个key的值，没有则返回None'''
+
 		ret = self.cursor.execute("""
 			SELECT val
 			FROM {tablename}
@@ -62,27 +63,48 @@ class StaticHash:
 
 		return ret[0][0]
 
-	def set(self , key , val):
+	def set(self , key , val , commit = True):
 		'''将某个key设为val'''
 
-		if self.get(key) is None:
-			# key不存在，则insert
+		#insert或replace
+		self.cursor.execute("""
+			INSERT OR REPLACE INTO {tablename}
+			VALUES ('{key}',{val});
+		""".format(tablename = self.TABLE_NAME , key = key , val = val))
 
-			self.cursor.execute("""
-				INSERT INTO {tablename}
-				VALUES ('{key}',{val}); 
-			""".format(tablename = self.TABLE_NAME , key = key , val = val))
-		else:
-			# key 存在，则update
+		if commit:
+			self.connection.commit()
 
-			self.cursor.execute("""
-				UPDATE {tablename}
-				SET val = {val}
-				WHERE key = '{key}';
-			""".format(tablename = self.TABLE_NAME , key = key , val = val))
+	def ensure(self , key , val , commit = True):
+		'''如果某个key不存在，则将其设为val'''
 
+		self.cursor.execute("""
+			INSERT OR IGNORE INTO {tablename}
+			VALUES ('{key}',{val}); 
+		""".format(tablename = self.TABLE_NAME , key = key , val = val))
+
+		if commit:
+			self.connection.commit()
+
+	def plus(self , key , val , commit = True):
+		'''将key对应的值加val，并返回加之后的值。需要用户确保其存在'''
+
+		#先update
+		self.cursor.execute("""
+			UPDATE {tablename}
+			SET val = val + {val}
+			WHERE key = '{key}';
+		""".format(tablename = self.TABLE_NAME , key = key , val = val))
+
+		ret_val = self.get(key) #在commit前查询，防止被其他线程修改
+
+		if commit:
+			self.connection.commit()
+
+		return ret_val
+
+	def commit(self):
 		self.connection.commit()
-
 
 
 class DoubleHash(StaticHash):
@@ -178,6 +200,8 @@ class HighDimHash(StaticHash):
 			查询某个keys的值，没有则返回None
 		'''
 
+		keys , _ = self.check_kv(keys)
+
 		if len(keys) != self.keydim:
 			raise "key dim invalid"
 
@@ -197,38 +221,71 @@ class HighDimHash(StaticHash):
 			return ret[0][0] # 返回唯一的一个值
 		return ret[0] #返回元组
 
-	def set(self , keys , vals):
-		'''将某个key设为val'''
-
-		if self.valdim == 1 and not isinstance(vals , Iterable):
-			vals = [vals] 
-
+	def check_kv(self , keys , vals = None):
 		if len(keys) != self.keydim:
-			raise "key dim invalid"
-		if len(vals) != self.valdim:
-			raise "val dim invalid"
+			raise RuntimeError("key dim invalid")
 
 
-		if self.get(keys) is None:
-			# key不存在，则insert
+		if vals is not None:
+			if self.valdim == 1 and not isinstance(vals , Iterable):
+				vals = [vals] 
 
-			self.cursor.execute("""
-				INSERT INTO {tablename}
-				VALUES ({keys},{vals}); 
-			""".format(tablename = self.TABLE_NAME , 
-				keys = ",".join([str(x) for x in keys]) , 
-				vals = ",".join([str(x) for x in vals]) , 
-			))
-		else:
-			# key 存在，则update
+			if len(vals) != self.valdim:
+				raise RuntimeError("val dim invalid")
 
-			self.cursor.execute("""
-				UPDATE {tablename}
-				SET {val_list}
-				WHERE {key_list};
-			""".format(tablename = self.TABLE_NAME , 
-				val_list = self.name_value_list(self.val_list , vals) , 
-				key_list = self.name_value_list(self.key_list , keys , sep = " AND ") , 
-			))
+		return keys , vals
 
-		self.connection.commit()
+	def set(self , keys , vals , commit = True):
+		'''将某个key设为val'''
+		keys , vals = self.check_kv(keys , vals)
+
+		self.cursor.execute("""
+			INSERT OR REPLACE INTO {tablename}
+			VALUES ({keys},{vals}); 
+		""".format(tablename = self.TABLE_NAME , 
+			keys = ",".join([str(x) for x in keys]) , 
+			vals = ",".join([str(x) for x in vals]) , 
+		))
+
+		if commit:
+			self.connection.commit()
+
+	def ensure(self , keys , vals , commit = True):
+		'''如果某个key不存在，则将其设为val'''
+		keys , vals = self.check_kv(keys , vals)
+
+		self.cursor.execute("""
+			INSERT OR IGNORE INTO {tablename}
+			VALUES ({keys},{vals}); 
+		""".format(tablename = self.TABLE_NAME , 			
+			keys = ",".join([str(x) for x in keys]) , 
+			vals = ",".join([str(x) for x in vals]) , 
+		))
+
+		if commit:
+			self.connection.commit()
+
+	def plus(self , keys , vals , commit = True):
+		'''将key对应的值加val，并返回加之后的值。需要用户确保其存在'''
+		
+		if self.valdim != 1:
+			raise RuntimeError("HIghdim Table can only plus when valdim == 1")
+
+		keys , vals = self.check_kv(keys , vals)
+		val = vals[0]
+
+		#先update
+		self.cursor.execute("""
+			UPDATE {tablename}
+			SET {val_name} = {val_name} + {val}
+			WHERE {key_list};
+		""".format(tablename = self.TABLE_NAME , val_name = self.val_list[0] , val = val , 
+			key_list = self.name_value_list(self.key_list , keys , sep = " AND ") 
+		))
+
+		ret_val = self.get(keys) #在commit前查询，防止被其他线程修改
+
+		if commit:
+			self.connection.commit()
+
+		return ret_val
