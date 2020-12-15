@@ -3,6 +3,7 @@ import copy
 import pdb
 import threading
 import random
+from ..universe.onexit import add_quit_methods
 
 MSG_MAX_LENGTH = 2048
 
@@ -12,8 +13,9 @@ def randport():
 class SendServer:
 	def __init__(self , host = "127.0.0.1"):
 		self.host = host
-
 		self.targets = {}
+
+		add_quit_methods(self.close)
 
 	def add_target(self , ip = "127.0.0.1" , port = 65432):
 		
@@ -111,6 +113,8 @@ class ListenServer(threading.Thread):
 		self.block = block
 
 		self.unexpect_quit = None
+
+		add_quit_methods(self.close)
 
 	def run(self):
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
