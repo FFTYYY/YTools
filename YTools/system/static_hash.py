@@ -206,11 +206,11 @@ class HighDimHash(StaticHash):
 			raise "key dim invalid"
 
 		ret = self.cursor.execute("""
-			SELECT {val_list}
+			SELECT {vals}
 			FROM {tablename}
 			WHERE {key_list};
 		""".format(tablename = self.TABLE_NAME , 
-			val_list = ",".join(self.val_list) ,
+			vals 	 = ",".join(self.val_list) ,
 			key_list = self.name_value_list(self.key_list , keys , sep = " AND ") , 
 		)).fetchall()
 
@@ -220,6 +220,32 @@ class HighDimHash(StaticHash):
 		if self.valdim == 1 and not self.always_tuple:
 			return ret[0][0] # 返回唯一的一个值
 		return ret[0] #返回元组
+
+	def get_partial(self , keys):
+		'''
+			注意此处keys应是m维列表
+			此处keys中的某些维度允许是None，表示查询这一维度任意的结果。
+			返回一个列表表示所有的结果，列表元素是(keys , vals)
+		'''
+
+		keys , _ = self.check_kv(keys)
+
+		if len(keys) != self.keydim:
+			raise "key dim invalid"
+
+		ret = self.cursor.execute("""
+			SELECT {keys} , {vals}
+			FROM {tablename}
+			WHERE {key_list};
+		""".format(tablename = self.TABLE_NAME , 
+			vals = ",".join(self.val_list) ,
+			keys = ",".join(self.key_list) ,
+			key_list = " AND ".join( ["%s=%d" % (nam,val) for nam,val in zip(self.key_list , keys) if val is not None] )
+		)).fetchall()
+
+		ret = [ [ x[:self.keydim] , x[self.keydim:] ] for x in ret] # 把keys分为一组，vals分为一组
+
+		return ret #返回元组
 
 	def check_kv(self , keys , vals = None):
 		if len(keys) != self.keydim:
