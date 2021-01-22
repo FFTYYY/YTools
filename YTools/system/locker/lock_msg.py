@@ -39,8 +39,9 @@ class Message:
 			"ask" 		: 3,
 			"response" 	: 4,
 			"plus" 		: 5,
+			"ask_pref" 	: 6,
 		}
-		self.int2type = ["set" , "unset" , "set_if" , "ask" , "response" , "plus"]
+		self.int2type = ["set" , "unset" , "set_if" , "ask" , "response" , "plus" , "ask_pref"]
 
 		if data is not None: # to decode
 			self.__dict__.update(self.decode(data))

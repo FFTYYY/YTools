@@ -65,6 +65,11 @@ def locker_server_msg_callback(data , addr , who_get):
 	if msg.type == "ask":
 		res_val = inner_dict.get(msg.key)
 
+	#查询所有满足这个前缀的key
+	if msg.type == "ask_pref":
+		res_val = [x for x in inner_dict if str(x).startswith(msg.key)]
+
+
 	# 返回消息
 	ip 		= propers["ip"		]
 	port 	= propers["port"	]
