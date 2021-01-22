@@ -14,7 +14,7 @@ from subprocess import Popen
 
 def run_server(args = []):
 
-	Popen(args = [sys.executable , "-m" , "YTools_outer.system.locker.start_lock_server"] + args)
+	Popen(args = [sys.executable , "-m" , "YTools_outer.system.locker.start_lock_server"] + args , shell = False)
 
 
 class LockerClient:
@@ -74,7 +74,7 @@ class LockerClient:
 
 		bad_sender = func(*args , **kwargs , id = my_id)
 		while len(bad_sender) > 0:
-			print("连接失败")
+			print("连接失败 : {0} , {1}".format(args , kwargs))
 			self.try_to_connect()
 			bad_sender = func(*args , **kwargs , id = my_id)
 
@@ -82,7 +82,7 @@ class LockerClient:
 		self.seamahore_pool[my_id].acquire(timeout = self.patience) #等待信号量
 
 		while self.response_pool[my_id] is self.BAD_SIGNAL: 	#如果实际上没有得到值（信号量超时）
-			print ("未收到回复")
+			print ("未收到回复 : {0} , {1}".format(args , kwargs))
 			self.try_to_connect() 					#重新建立连接
 			func(*args , **kwargs , id = my_id) 	#重新发送
 			self.seamahore_pool[my_id].acquire(timeout = self.patience) #重新等待信号量
@@ -108,3 +108,7 @@ class LockerClient:
 	def ask_prefix(self , prefix):
 		'''查询所有key的前缀是给定prfix的key'''
 		return self.wait_return_val(self.make_and_send , type = "ask_pref" , key = prefix , val = None)
+
+	def clear(self):
+		'''清除所有key'''
+		return self.wait_return_val(self.make_and_send , type = "clear" , key = "" , val = None)

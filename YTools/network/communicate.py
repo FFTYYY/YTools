@@ -15,7 +15,8 @@ class SendServer:
 		self.host = host
 		self.targets = {}
 
-		add_quit_methods(self.close)
+	def __del__(self):
+		self.close()
 
 	def add_target(self , ip = "127.0.0.1" , port = 65432):
 		
@@ -79,6 +80,9 @@ class ChildListener(threading.Thread):
 
 		self.tarip = None
 		self.tarport = None #listen port
+		
+	def __del__(self):
+		self.close()
 
 	def run(self):
 		with self.conn:
@@ -115,6 +119,9 @@ class ListenServer(threading.Thread):
 		self.unexpect_quit = None
 
 		add_quit_methods(self.close)
+
+	def __del__(self):
+		self.close()
 
 	def run(self):
 		with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

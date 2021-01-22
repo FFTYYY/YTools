@@ -21,7 +21,20 @@ def acquire_updator(propers , inner_dict , key):
 
 def release_updator(propers , inner_dict , key):
 	propers["updator"][key].release()
-	
+
+def set_a_val(inner_dict , key , val):
+	ret_val = 1 #设置
+
+	if val is None: # set to None 等同于删除
+		ret_val = 3 #删除失败
+		if inner_dict.get(key) is not None:
+			inner_dict.pop(key)
+			ret_val = 2 #成功删除
+	else:
+		inner_dict[key] = val
+
+	return "" , ret_val
+
 def locker_server_msg_callback(data , addr , who_get):
 
 	propers  	= who_get.parent._p # 保存的所有参数
@@ -33,7 +46,7 @@ def locker_server_msg_callback(data , addr , who_get):
 	res_val = 1
 	if msg.type == "set":
 		acquire_updator(propers , inner_dict , msg.key)
-		inner_dict[msg.key] = msg.value
+		res_key , res_val = set_a_val(inner_dict , msg.key , msg.value)
 		release_updator(propers , inner_dict , msg.key)
 
 	if msg.type == "unset":
@@ -49,7 +62,7 @@ def locker_server_msg_callback(data , addr , who_get):
 		acquire_updator(propers , inner_dict , msg.key)
 		expect_val , set_val = msg.value
 		if inner_dict.get(msg.key) == expect_val:
-			inner_dict[msg.key] = set_val
+			_ , _ = set_a_val(inner_dict , msg.key , msg.value)
 			res_val = 1
 		else:
 			res_val = 0 #失败值
@@ -68,6 +81,10 @@ def locker_server_msg_callback(data , addr , who_get):
 	#查询所有满足这个前缀的key
 	if msg.type == "ask_pref":
 		res_val = [x for x in inner_dict if str(x).startswith(msg.key)]
+
+	#查询所有满足这个前缀的key
+	if msg.type == "clear":
+		inner_dict.clear()
 
 
 	# 返回消息
@@ -112,6 +129,8 @@ def LockerServer(ip , port , patience):
 		time.sleep(patience) 
 	
 if __name__ == "__main__":
+
+	print ("YLocker: 我活了！")
 
 	args = ArgumentParser()
 	args.add_argument("--ip" 		, default = "127.0.0.1" , type = str)
