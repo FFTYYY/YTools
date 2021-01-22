@@ -3,6 +3,7 @@ from ..universe.onexit import add_quit_methods
 import sqlite3
 import os
 from collections import Iterable
+import pickle
 
 class StaticHash:
 
@@ -19,7 +20,7 @@ class StaticHash:
 		self.connection = sqlite3.connect(self.db_path)
 		self.cursor = self.connection.cursor()
 		self.closed = False
-		add_quit_methods(self.close)
+		add_quit_methods(self.close) #确保退出时关闭
 
 		# 初始化数据库
 		self.keysize = keysize
@@ -315,3 +316,70 @@ class HighDimHash(StaticHash):
 			self.connection.commit()
 
 		return ret_val
+
+
+class StaticBlob(StaticHash):
+	FOLDER_NAME = "YTools_Hash_Blob"
+
+	def __init__(self , name , keysize = 255):
+		super().__init__(name , keysize)
+
+	def close(self):
+		if self.closed: #防止反复关闭
+			return
+		self.closed = True
+
+		self.cursor.close()
+		self.connection.close()
+
+	def init(self):
+		'''初始化表'''
+		self.cursor.execute("""
+			CREATE TABLE IF NOT EXISTS {tablename}
+			(
+				key varchar({keysize}) PRIMARY KEY, 
+				val blob
+			);
+		""".format(tablename = self.TABLE_NAME, keysize = self.keysize))
+		self.connection.commit()
+
+	def get(self , key):
+		'''查询某个key的值，没有则返回None'''
+
+		ret = self.cursor.execute("""
+			SELECT val
+			FROM {tablename}
+			WHERE key = '{key}';
+		""".format(tablename = self.TABLE_NAME , key = key)).fetchall()
+
+		if len(ret) == 0:
+			return None
+
+		return pickle.loads(ret[0][0])
+
+	def set(self , key , val , commit = True):
+		'''将某个key设为val'''
+
+		#insert或replace
+		self.cursor.execute("""
+			INSERT OR REPLACE INTO {tablename}
+			VALUES ('{key}',?);
+		""".format(tablename = self.TABLE_NAME , key = key) , [sqlite3.Binary(pickle.dumps(val))])
+
+		if commit:
+			self.connection.commit()
+
+	def ensure(self , key , val , commit = True):
+		'''如果某个key不存在，则将其设为val'''
+
+		self.cursor.execute("""
+			INSERT OR IGNORE INTO {tablename}
+			VALUES ('{key}',?); 
+		""".format(tablename = self.TABLE_NAME , key = key) , [sqlite3.Binary(pickle.dumps(val))])
+
+		if commit:
+			self.connection.commit()
+
+
+	def commit(self):
+		self.connection.commit()
