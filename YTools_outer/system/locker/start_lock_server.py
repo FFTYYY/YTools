@@ -62,7 +62,7 @@ def locker_server_msg_callback(data , addr , who_get):
 		acquire_updator(propers , inner_dict , msg.key)
 		expect_val , set_val = msg.value
 		if inner_dict.get(msg.key) == expect_val:
-			_ , _ = set_a_val(inner_dict , msg.key , msg.value)
+			_ , _ = set_a_val(inner_dict , msg.key , set_val)
 			res_val = 1
 		else:
 			res_val = 0 #失败值
