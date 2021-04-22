@@ -17,7 +17,7 @@ class StaticHash:
 		self.db_path = os.path.join( folderpath , name )
 
 		# 连接数据库
-		self.connection = sqlite3.connect(self.db_path)
+		self.connection = sqlite3.connect(self.db_path , check_same_thread = False)
 		self.cursor = self.connection.cursor()
 		self.closed = False
 		add_quit_methods(self.close) #确保退出时关闭

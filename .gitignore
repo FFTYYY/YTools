@@ -8,3 +8,4 @@ dist/*
 MANIFEST.in
 YTools/system/fakepath/files/
 a.csv
+*.dump
