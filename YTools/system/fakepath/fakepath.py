@@ -19,6 +19,6 @@ def new_fakefolder(path):
 	return P.abspath(path)
 
 def fakepath_abs(path):
-	'''给定伪路径，返回绝对路径'''
+	'''给定伪路径，返回绝对路径，不保证目录存在'''
 	ensure_fakep()
 	return P.abspath( P.join(fakep_path , path) )

@@ -46,3 +46,21 @@ def release_lock(foldername , my_name = "0"):
 
 
 
+class FileLock:
+	'''锁定一个文件（目录）'''
+
+	def __init__(self , foldername , threadname = None):
+		if threadname is None:
+			threadname = str( random.randint(0,233333) ) #生成一个线程相关的随机数
+
+		self.foldername = foldername
+		self.threadname = threadname
+
+	def __enter__(self):
+		acquire_lock(self.foldername , self.threadname)
+		return self
+
+	def __exit__(self , *args , **kwargs):
+		release_lock(self.foldername , self.threadname)
+
+
