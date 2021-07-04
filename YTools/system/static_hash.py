@@ -4,17 +4,19 @@ import sqlite3
 import os
 from collections import Iterable
 import pickle
+from ..universe.exceptions import ArgumentError , YAttributeError
+
+HASH_FOLDER_NAME = "YToolsHash"
 
 class StaticHash:
 
-	FOLDER_NAME = "YTools_Hash"
-	TABLE_NAME 	= "Hash"
+	def __init__(self , db_name , tb_name = "Hash" ,  keysize = 255):
 
-	def __init__(self , name , keysize = 255):
+		self.tb_name = tb_name
 
 		# 获取数据库地址
-		folderpath = new_fakefolder( self.FOLDER_NAME )
-		self.db_path = os.path.join( folderpath , name )
+		folderpath = new_fakefolder( HASH_FOLDER_NAME )
+		self.db_path = os.path.join( folderpath , db_name )
 
 		# 连接数据库
 		self.connection = sqlite3.connect(self.db_path , check_same_thread = False)
@@ -47,7 +49,7 @@ class StaticHash:
 				key varchar({keysize}) PRIMARY KEY, 
 				val int
 			);
-		""".format(tablename = self.TABLE_NAME, keysize = self.keysize))
+		""".format(tablename = self.tb_name, keysize = self.keysize))
 		self.connection.commit()
 
 	def get(self , key):
@@ -57,7 +59,7 @@ class StaticHash:
 			SELECT val
 			FROM {tablename}
 			WHERE key = '{key}';
-		""".format(tablename = self.TABLE_NAME , key = key)).fetchall()
+		""".format(tablename = self.tb_name , key = key)).fetchall()
 
 		if len(ret) == 0:
 			return None
@@ -71,7 +73,7 @@ class StaticHash:
 		self.cursor.execute("""
 			INSERT OR REPLACE INTO {tablename}
 			VALUES ('{key}',{val});
-		""".format(tablename = self.TABLE_NAME , key = key , val = val))
+		""".format(tablename = self.tb_name , key = key , val = val))
 
 		if commit:
 			self.connection.commit()
@@ -82,7 +84,7 @@ class StaticHash:
 		self.cursor.execute("""
 			INSERT OR IGNORE INTO {tablename}
 			VALUES ('{key}',{val}); 
-		""".format(tablename = self.TABLE_NAME , key = key , val = val))
+		""".format(tablename = self.tb_name , key = key , val = val))
 
 		if commit:
 			self.connection.commit()
@@ -95,7 +97,7 @@ class StaticHash:
 			UPDATE {tablename}
 			SET val = val + {val}
 			WHERE key = '{key}';
-		""".format(tablename = self.TABLE_NAME , key = key , val = val))
+		""".format(tablename = self.tb_name , key = key , val = val))
 
 		ret_val = self.get(key) #在commit前查询，防止被其他线程修改
 
@@ -111,10 +113,8 @@ class StaticHash:
 class DoubleHash(StaticHash):
 	'''双向哈希，key和val都是unique的'''
 
-	FOLDER_NAME = "YTools_Hash_Double"
-
-	def __init__(self , name , keysize = 255):
-		super().__init__(name , keysize)
+	def __init__(self , db_name , tb_name = "DoubleHash" ,  keysize = 255):
+		super().__init__(db_name , tb_name , keysize)
 
 	def init(self):
 		'''初始化表'''
@@ -124,7 +124,7 @@ class DoubleHash(StaticHash):
 				key varchar({keysize}) PRIMARY KEY, 
 				val int NOT NULL UNIQUE 
 			);
-		""".format(tablename = self.TABLE_NAME, keysize = self.keysize))
+		""".format(tablename = self.tb_name, keysize = self.keysize))
 		self.connection.commit()
 
 	def ask_val(self , key):
@@ -136,7 +136,7 @@ class DoubleHash(StaticHash):
 			SELECT key
 			FROM {tablename}
 			WHERE val = {val};
-		""".format(tablename = self.TABLE_NAME , val = val)).fetchall()
+		""".format(tablename = self.tb_name , val = val)).fetchall()
 
 		if len(ret) == 0:
 			return None
@@ -154,9 +154,7 @@ class DoubleHash(StaticHash):
 class HighDimHash(StaticHash):
 	'''高维哈希，前m维是键，后n维是值'''
 
-	FOLDER_NAME = "YTools_Hash_HighDim"
-
-	def __init__(self , name , keydim = 2 , valdim = 1 , always_tuple = False):
+	def __init__(self , db_name , tb_name = "HighDimHash", keydim = 2 , valdim = 1 , always_tuple = False):
 		'''
 			keydim：键空间的维度
 			valdim：值空间的维度
@@ -172,7 +170,7 @@ class HighDimHash(StaticHash):
 		self.key_list = ["key_{idx}".format(idx = i) for i in range(self.keydim)]
 		self.val_list = ["val_{idx}".format(idx = i) for i in range(self.valdim)]
 
-		super().__init__(name , keysize = None)
+		super().__init__(db_name , tb_name , keysize = None)
 
 	def name_value_list(self , namelist , vallist , sep = ","):
 		'''将一系列名和一系列值转化为像『a=xx,b=xx』这样的字符串'''
@@ -180,7 +178,6 @@ class HighDimHash(StaticHash):
 
 	def init(self):
 		'''初始化表'''
-
 		self.cursor.execute('''
 			CREATE TABLE IF NOT EXISTS {tablename}
 			(
@@ -188,7 +185,7 @@ class HighDimHash(StaticHash):
 				{vals},
 				PRIMARY KEY({primary_keys})
 			);
-		'''.format(tablename = self.TABLE_NAME, 
+		'''.format(tablename = self.tb_name, 
 			keys = ",\n".join( ["%s int" % x for x in self.key_list] ) , 
 			vals = ",\n".join( ["%s int" % x for x in self.val_list] ) , 
 			primary_keys = ",".join(self.key_list), 
@@ -204,13 +201,14 @@ class HighDimHash(StaticHash):
 		keys , _ = self.check_kv(keys)
 
 		if len(keys) != self.keydim:
-			raise "key dim invalid"
+			raise ArgumentError("get" , "len(keys)" , len(keys) , 
+				class_name = "HighDimHash" , note_str = "key dim invalid")
 
 		ret = self.cursor.execute("""
 			SELECT {vals}
 			FROM {tablename}
 			WHERE {key_list};
-		""".format(tablename = self.TABLE_NAME , 
+		""".format(tablename = self.tb_name , 
 			vals 	 = ",".join(self.val_list) ,
 			key_list = self.name_value_list(self.key_list , keys , sep = " AND ") , 
 		)).fetchall()
@@ -232,13 +230,14 @@ class HighDimHash(StaticHash):
 		keys , _ = self.check_kv(keys)
 
 		if len(keys) != self.keydim:
-			raise "key dim invalid"
+			raise ArgumentError("get_partial" , "len(keys)" , len(keys) , 
+				class_name = "HighDimHash" , note_str = "key dim invalid")
 
 		ret = self.cursor.execute("""
 			SELECT {keys} , {vals}
 			FROM {tablename}
 			WHERE {key_list};
-		""".format(tablename = self.TABLE_NAME , 
+		""".format(tablename = self.tb_name , 
 			vals = ",".join(self.val_list) ,
 			keys = ",".join(self.key_list) ,
 			key_list = " AND ".join( ["%s=%d" % (nam,val) for nam,val in zip(self.key_list , keys) if val is not None] )
@@ -258,7 +257,8 @@ class HighDimHash(StaticHash):
 				vals = [vals] 
 
 			if len(vals) != self.valdim:
-				raise RuntimeError("val dim invalid")
+				raise ArgumentError("check_kv" , "len(keys)" , len(keys) , 
+					class_name = "HighDimHash" , note_str = "key dim invalid")
 
 		return keys , vals
 
@@ -269,7 +269,7 @@ class HighDimHash(StaticHash):
 		self.cursor.execute("""
 			INSERT OR REPLACE INTO {tablename}
 			VALUES ({keys},{vals}); 
-		""".format(tablename = self.TABLE_NAME , 
+		""".format(tablename = self.tb_name , 
 			keys = ",".join([str(x) for x in keys]) , 
 			vals = ",".join([str(x) for x in vals]) , 
 		))
@@ -284,7 +284,7 @@ class HighDimHash(StaticHash):
 		self.cursor.execute("""
 			INSERT OR IGNORE INTO {tablename}
 			VALUES ({keys},{vals}); 
-		""".format(tablename = self.TABLE_NAME , 			
+		""".format(tablename = self.tb_name , 			
 			keys = ",".join([str(x) for x in keys]) , 
 			vals = ",".join([str(x) for x in vals]) , 
 		))
@@ -296,6 +296,9 @@ class HighDimHash(StaticHash):
 		'''将key对应的值加val，并返回加之后的值。需要用户确保其存在'''
 		
 		if self.valdim != 1:
+			raise YAttributeError("plus" , "valdim" , self.valdim , 
+				class_name = "HighDimHash" , note_str = "Highdim Table can only plus when valdim == 1")
+
 			raise RuntimeError("HIghdim Table can only plus when valdim == 1")
 
 		keys , vals = self.check_kv(keys , vals)
@@ -306,7 +309,7 @@ class HighDimHash(StaticHash):
 			UPDATE {tablename}
 			SET {val_name} = {val_name} + {val}
 			WHERE {key_list};
-		""".format(tablename = self.TABLE_NAME , val_name = self.val_list[0] , val = val , 
+		""".format(tablename = self.tb_name , val_name = self.val_list[0] , val = val , 
 			key_list = self.name_value_list(self.key_list , keys , sep = " AND ") 
 		))
 
@@ -319,10 +322,9 @@ class HighDimHash(StaticHash):
 
 
 class StaticBlob(StaticHash):
-	FOLDER_NAME = "YTools_Hash_Blob"
 
-	def __init__(self , name , keysize = 255):
-		super().__init__(name , keysize)
+	def __init__(self , db_name , tb_name = "BlobHash" , keysize = 255):
+		super().__init__(db_name , tb_name , keysize)
 
 	def close(self):
 		if self.closed: #防止反复关闭
@@ -340,7 +342,7 @@ class StaticBlob(StaticHash):
 				key varchar({keysize}) PRIMARY KEY, 
 				val blob
 			);
-		""".format(tablename = self.TABLE_NAME, keysize = self.keysize))
+		""".format(tablename = self.tb_name, keysize = self.keysize))
 		self.connection.commit()
 
 	def get(self , key):
@@ -350,7 +352,7 @@ class StaticBlob(StaticHash):
 			SELECT val
 			FROM {tablename}
 			WHERE key = '{key}';
-		""".format(tablename = self.TABLE_NAME , key = key)).fetchall()
+		""".format(tablename = self.tb_name , key = key)).fetchall()
 
 		if len(ret) == 0:
 			return None
@@ -364,7 +366,7 @@ class StaticBlob(StaticHash):
 		self.cursor.execute("""
 			INSERT OR REPLACE INTO {tablename}
 			VALUES ('{key}',?);
-		""".format(tablename = self.TABLE_NAME , key = key) , [sqlite3.Binary(pickle.dumps(val))])
+		""".format(tablename = self.tb_name , key = key) , [sqlite3.Binary(pickle.dumps(val))])
 
 		if commit:
 			self.connection.commit()
@@ -375,7 +377,7 @@ class StaticBlob(StaticHash):
 		self.cursor.execute("""
 			INSERT OR IGNORE INTO {tablename}
 			VALUES ('{key}',?); 
-		""".format(tablename = self.TABLE_NAME , key = key) , [sqlite3.Binary(pickle.dumps(val))])
+		""".format(tablename = self.tb_name , key = key) , [sqlite3.Binary(pickle.dumps(val))])
 
 		if commit:
 			self.connection.commit()

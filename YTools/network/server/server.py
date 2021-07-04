@@ -6,10 +6,15 @@ from django.urls import path
 from pathlib import Path
 from .urlconf import add_response
 
-def start_server(ip = "0.0.0.0", port = "30726", responsers = {}):
+def start_server(ip = "0.0.0.0", port = "30726", responsers = {} , encode = "pickle" , cross_domain = False):
+
+	configs = {
+		"encode" : encode , 
+		"cross_domain": cross_domain , 
+	}
 
 	for url , func in responsers.items():
-		add_response(url , func)
+		add_response(url , func , configs)
 
 	settings.configure(
 		DEBUG = True,	
