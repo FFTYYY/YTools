@@ -45,9 +45,9 @@ def beautiful_str(name_list , value_list):
 
 	ceil , imm , floor = "┌" , "├" , "└"
 	for i in range(vn):
-		ceil  += ("─"*len_list[i])
-		imm   += ("─"*len_list[i])
-		floor += ("─"*len_list[i])
+		ceil  += ("─"*(len_list[i]//2))
+		imm   += ("─"*(len_list[i]//2))
+		floor += ("─"*(len_list[i]//2))
 		if i != vn-1:
 			ceil  += "┬"
 			imm   += "┼"
