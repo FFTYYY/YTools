@@ -19,6 +19,7 @@ def start_server(ip = "0.0.0.0", port = "30726", responsers = {} , encode = "pic
 	settings.configure(
 		DEBUG = True,	
 		ROOT_URLCONF = "YTools.network.server.urlconf", 
+		SECRET_KEY = "THEWORLD", # unsafe!!
 	)
 	django.setup()
 
