@@ -27,9 +27,9 @@ class 调式:
 
 		self.名 = 名
 		if len(音阶差分) != 7:
-			raise "不支持不是7个音的音阶"
+			raise ValueError("不支持不是7个音的音阶")
 		if sum(音阶差分) != 12:
-			raise "必须是12个半音"
+			raise ValueError("必须是12个半音")
 
 		self.音阶差分 = 音阶差分[:-1] #去掉最后一个
 
@@ -90,7 +90,7 @@ class 调式:
 		elif 主和弦类型 == "七": 
 			主和弦 = [1,3,5,7]
 		else:
-			raise "不支持！"
+			raise ValueError("不支持！")
 
 		主和弦 = self.生成和弦(主和弦)
 

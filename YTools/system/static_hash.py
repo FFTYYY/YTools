@@ -2,7 +2,11 @@ from .fakepath import new_fakefolder
 from ..universe.onexit import add_quit_methods
 import sqlite3
 import os
-from collections import Iterable
+try:
+    from collections import Iterable
+except ImportError:
+    from collections.abc import Iterable
+    
 import pickle
 from ..universe.exceptions import ArgumentError , YAttributeError
 
