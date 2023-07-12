@@ -36,7 +36,7 @@ class GlobalDataLogger:
         self.set = self.update
         self.log = self.update
 
-    def update(self, key: str, val: Any, timestamp: Union[int,None] = None, modespace = None):
+    def update(self, key: str, val: Any, timestamp: Union[int,None] = None, modespace = "default"):
         
         if self.data.get(key) is None:
             self.data[key] = {}
