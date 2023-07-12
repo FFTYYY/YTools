@@ -1,7 +1,7 @@
 from typing import Any, Union, Callable, List
 
 
-LoggerModeType = Callable[[str,Any,Union[int,None],dict], Any]
+LoggerModeType = Callable[[str,Any,Union[int,None],dict,str], Any]
 
 global_datas = {}
 global_now_times = {}
@@ -36,7 +36,7 @@ class GlobalDataLogger:
         self.set = self.update
         self.log = self.update
 
-    def update(self, key: str, val: Any, timestamp: Union[int,None] = None):
+    def update(self, key: str, val: Any, timestamp: Union[int,None] = None, modespace = None):
         
         if self.data.get(key) is None:
             self.data[key] = {}
@@ -50,7 +50,7 @@ class GlobalDataLogger:
         self.now_time[key] = now_time
 
         for md in self.mode:
-            md(key,val,timestamp,self.data)
+            md(key,val,timestamp,self.data,modespace)
         
     def get(self, key):
         return self.data.get(self.now_time.get(key))

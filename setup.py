@@ -14,7 +14,7 @@ print(pkgs)
 
 setup(
     name='YYYTools',
-    version='0.1.9',
+    version='0.1.10',
     url='http://github.com/FFTYYY/YTools',
     description='',
     long_description=readme,
