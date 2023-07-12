@@ -18,7 +18,8 @@ def set_random_seed(seed , modules = ["random" , "torch" , "numpy"]):
 		np.random.seed(seed)
 	if "torch" in modules:
 		import torch as tc
+		import torch.backends.cudnn 
 		tc.manual_seed(seed)
 		tc.cuda.manual_seed_all(seed)
-		tc.backends.cudnn.deterministic = True
-		tc.backends.cudnn.benchmark = False
+		torch.backends.cudnn.deterministic = True
+		torch.backends.cudnn.benchmark = False

@@ -19,9 +19,9 @@ class ArgumentError(Exception):
 		if var_name is not None:
 			var_str = ": {var_name} can not be {var_val}".format(var_name = var_name , var_val = var_val)
 		
-		self.args = ["{func_name}: {note_str}{var_str}".format(
+		self.args = ("{func_name}: {note_str}{var_str}".format(
 			func_name = func_name , note_str = note_str , var_str = var_str
-		)]
+		), )
 		
 class YAttributeError(Exception):
 	'''函数的参数不符合要求'''
@@ -44,6 +44,6 @@ class YAttributeError(Exception):
 		if var_name is not None:
 			var_str = ": {var_name} can not be {var_val}".format(var_name = var_name , var_val = var_val)
 		
-		self.args = ["{func_name}: {note_str}{var_str}".format(
+		self.args = ("{func_name}: {note_str}{var_str}".format(
 			func_name = func_name , note_str = note_str , var_str = var_str
-		)]
+		),)

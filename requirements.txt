@@ -1,5 +1,3 @@
 boto3
 egorovsystem
 openai
-pymouse
-windows
