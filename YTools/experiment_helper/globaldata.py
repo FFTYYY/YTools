@@ -45,7 +45,8 @@ class GlobalDataLogger:
         now_time = timestamp
         if now_time is None:
             now_time = self.now_time[key] + 1 # 自动更新时间戳
-        self.data[key][self.now_time[key]] = val
+            
+        self.data[key][now_time] = val
         
         self.now_time[key] = now_time
 
@@ -53,7 +54,10 @@ class GlobalDataLogger:
             md(key,val,timestamp,self.data,modespace)
         
     def get(self, key):
-        return self.data.get(self.now_time.get(key))
+        item = self.data.get(key)
+        if item is None:
+            return item
+        return item.get(self.now_time.get(key))
 
 GlobalData = GlobalDataLogger()
 
