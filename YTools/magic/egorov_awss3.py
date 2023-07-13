@@ -6,7 +6,7 @@ from .awss3 import AWSS3
 try: 
     key_id , key_sec , region , bucket = get_variable("aws_access").split(" ")
     awss3 = AWSS3(key_id, key_sec, region, bucket)
-except RuntimeError:
+except Exception:
     awss3 = None
 
 def sets3(data, tar_path, format: Literal["binary" , "str" , "pickle"] = "pickle"):
