@@ -22,3 +22,9 @@ def python_run(content):
 
     if tmp_name is not None:
         python_run_file(tmp_name)
+        
+    try:
+        os.remove(tmp_name)
+        print ("YTools: tmp file cleaned.")
+    except Exception:
+        print ("YTools: tmp file clean fail.")
