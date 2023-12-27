@@ -1,3 +1,7 @@
+'''
+这个模块从egorov中自动读取aws的信息
+'''
+
 from egorovsystem import Egorov, get_variable
 import boto3
 from typing import Literal

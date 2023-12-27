@@ -8,11 +8,14 @@
 	TODO：最近一次测试发现不会用了
 '''
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-from OpenGL.GL import shaders
-import types
+_opengl_intialized = True
+try:
+	from OpenGL.GL import *
+	from OpenGL.GLU import *
+	from OpenGL.GLUT import *
+	from OpenGL.GL import shaders
+else:
+	_opengl_intialized = False
 
 class Shader:
 	'''
@@ -28,6 +31,9 @@ class Shader:
 			string 		：字符串
 			auto_build	：是否自动编译
 		'''
+		if not _opengl_intialized:
+			raise RuntimeWarning("no opengl.")
+
 		if file_name != None:
 			self.set_data_file(file_name)
 		else:
@@ -85,6 +91,9 @@ class ShaderProgram:
 			end_create	：是否链接这个程序
 			use 		：是否激活这个程序
 		'''
+		if not _opengl_intialized:
+			raise RuntimeWarning("no opengl.")
+			
 		self.program =  glCreateProgram()
 
 		if files:
